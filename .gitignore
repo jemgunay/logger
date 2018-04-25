@@ -12,4 +12,4 @@
 *.out
 
 # Service specific binaries
-cmd/cmd
+cmd/logger/*
