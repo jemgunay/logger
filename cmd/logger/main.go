@@ -5,9 +5,11 @@ import (
 	"github.com/jemgunay/logger"
 	"os"
 	"strings"
+	"time"
 )
 
 var (
+	Plain     = &logger.Logger{Writer: os.Stdout, Enabled: true}
 	Info      = logger.NewLogger(os.Stdout, "INFO", false)
 	Error     = logger.NewLogger(os.Stderr, "ERROR", true)
 	Incoming  = logger.NewLogger(os.Stdout, "INCOMING", true)
@@ -17,46 +19,66 @@ var (
 )
 
 func main() {
-	// enable a previously disabled logger
+	example()
+	time.Sleep(time.Millisecond)
+}
+
+func example() {
+	/*
+	 * Enable a previously disabled logger.
+	 */
 	Info.Enable()
 	Info.Log("this logger has been enabled")
 
-	// an error logger (outputs to Stderr)
-	err := errors.New("this is an error")
-	Error.Logf("example formatted error message, err:[%v]", err.Error())
+	/*
+	 * An error logger (outputs to Stderr).
+	 */
+	for i := 1; i <= 4; i++ {
+		err := errors.New("this is an error")
+		Error.Logf("example error message no. %v, err:[%v]", i, err.Error())
+	}
 
-	// an incoming request logger
-	Incoming.SetMessagePrefix("< ")
-	Incoming.Logf("this is a formatted incoming request: %v", "localhost:8080/test")
+	/*
+	 * An incoming request logger.
+	 */
+	Incoming.Message.Formatter = func(msg string) string { return "< " + msg }
+	Incoming.Logf("this is a formatted incoming request: %v", "localhost:8080/retrieve")
 
-	// an outgoing request logger
+	/*
+	 * An outgoing request logger.
+	 */
 	Outgoing.Enable()
-	Outgoing.SetMessagePrefix("> ")
-	Outgoing.Logln("this is an outgoing request followed by a new line: ", "http://google.co.uk")
+	Outgoing.Message.Formatter = func(msg string) string { return "> " + msg }
+	Outgoing.Logln("this is an outgoing request followed by a new line: ", "http://google.com")
 
+	/*
+	 * A disabled logger.
+	 */
 	Outgoing.Disable()
-	Outgoing.Log("this outgoing request will not be written to Stdout: ", "http://google.co.uk")
+	Outgoing.Log("this outgoing request will not be written to Stdout: ", "http://google.com")
 
-	// a logger which writes to a file
-	fileWriter, err := os.Create("./test.txt")
+	/*
+	 * A logger which writes to a file.
+	 */
+	fileWriter, err := os.OpenFile("./test.txt", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		panic(err)
 	}
-	// close the file when finished logging
-	defer fileWriter.Close()
 
-	File.SetOutput(fileWriter)
+	File.Writer = fileWriter
 	File.Log("this message has been written to a file")
 
-	// provide a function to format all logged messages, e.g.
+	/*
+	 * Provide a function to format all logged messages, e.g.
+	 */
 	// ...to capitalise whole message:
-	Formatted.SetMsgFormatter(strings.ToUpper)
+	Formatted.Message.Formatter = strings.ToUpper
 	Formatted.Logf("this message used to be lower case")
 
 	// ...to alternate letter case:
-	alternateCase := func(msg string) (result string) {
+	alternateCase := func(s string) (result string) {
 		i := 0
-		for _, char := range msg {
+		for _, char := range s {
 			i++
 			if i%2 == 0 {
 				result += strings.ToUpper(string(char))
@@ -66,6 +88,6 @@ func main() {
 		}
 		return
 	}
-	Formatted.SetMsgFormatter(alternateCase)
+	Formatted.Message.Formatter = alternateCase
 	Formatted.Logf("this message also used to be lower case")
 }
