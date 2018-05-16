@@ -190,7 +190,7 @@ func NewLogger(handle io.Writer, category string, enabled bool) *Logger {
 			Formatter: SquareBracketWrapper,
 		},
 		Timestamp: Timestamp{
-			Format:    "06/01/02 15:04:05.00000",
+			Format:    "01/02 15:04:05",
 			Formatter: nil,
 		},
 		Message: Message{
@@ -205,13 +205,15 @@ func NewLogger(handle io.Writer, category string, enabled bool) *Logger {
 	return &newLogger
 }
 
-// AddLogger adds a pre-constructed Logger to the logger system.
-func AddLogger(newLogger *Logger) {
-	// store reference to logger & reset prefix padding
-	highestLoggerID++
-	newLogger.id = highestLoggerID
-	loggers[newLogger] = true
-	SetCategoryPadding(categoryPadding)
+// AddLogger adds a pre-constructed Logger(s) to the logger system.
+func AddLogger(newLoggers ...*Logger) {
+	for _, newLogger := range newLoggers {
+		// store reference to logger & reset prefix padding
+		highestLoggerID++
+		newLogger.id = highestLoggerID
+		loggers[newLogger] = true
+		SetCategoryPadding(categoryPadding)
+	}
 }
 
 // SetCategoryPadding is used to enable or disable padding after all Categories to align all Timestamps. This is also
