@@ -30,7 +30,7 @@ func init() {
 	startPoller()
 }
 
-// queueItem is used to
+// queueItem is used to push a new message onto the write queue
 type queueItem struct {
 	writer   io.Writer
 	category Category
